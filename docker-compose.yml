@@ -1,0 +1,42 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: pgvector/pgvector:pg16
+    container_name: studybuddy_db
+    environment:
+      POSTGRES_USER: studybuddy
+      POSTGRES_PASSWORD: studybuddy_pass
+      POSTGRES_DB: studybuddy
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  backend:
+    build: ./backend
+    container_name: studybuddy_api
+    environment:
+      DATABASE_URL: postgres://studybuddy:studybuddy_pass@postgres:5432/studybuddy
+      PORT: 3001
+    ports:
+      - "3001:3001"
+    depends_on:
+      - postgres
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+
+  frontend:
+    build: ./frontend
+    container_name: studybuddy_web
+    ports:
+      - "5173:5173"
+    depends_on:
+      - backend
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+
+volumes:
+  postgres_data:
