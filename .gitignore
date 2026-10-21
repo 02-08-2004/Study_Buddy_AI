@@ -5,3 +5,8 @@ dist/
 .DS_Store
 scratch/
 uploads/
+target/
+.classpath
+.project
+.settings/
+application-local.properties

@@ -21,6 +21,9 @@ require('./services/passport');
 const app = express();
 const PORT = process.env.PORT || 3001;
 
+// Disable ETag caching to prevent 304 Not Modified status codes
+app.disable('etag');
+
 // Security
 app.use(helmet({ crossOriginEmbedderPolicy: false }));
 

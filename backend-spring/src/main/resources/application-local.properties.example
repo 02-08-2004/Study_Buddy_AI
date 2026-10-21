@@ -1,0 +1,10 @@
+# Copy this file to application-local.properties and fill in your real values
+# application-local.properties is gitignored — never commit actual secrets!
+
+# Google OAuth2 Credentials
+google.client.id=YOUR_GOOGLE_CLIENT_ID_HERE
+google.client.secret=YOUR_GOOGLE_CLIENT_SECRET_HERE
+
+# AI API Keys
+ai.gemini.api-key=YOUR_GEMINI_API_KEY_HERE
+ai.openai.api-key=YOUR_OPENAI_API_KEY_HERE

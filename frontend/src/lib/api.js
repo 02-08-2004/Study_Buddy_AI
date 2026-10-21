@@ -3,7 +3,7 @@ import axios from 'axios';
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL || 'http://localhost:3001',
   withCredentials: true,
-  timeout: 30000 // 30 second timeout — prevents hanging requests
+  timeout: 120000 // 120 second timeout — allows rich AI & RAG processing without premature timeout
 });
 
 // Attach JWT token to every request
