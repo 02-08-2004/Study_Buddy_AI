@@ -1,7 +1,6 @@
 package com.studybuddy.controller;
 
 import com.studybuddy.model.ChatMessage;
-import com.studybuddy.model.Course;
 import com.studybuddy.model.StudySession;
 import com.studybuddy.model.User;
 import com.studybuddy.repository.ChatMessageRepository;
