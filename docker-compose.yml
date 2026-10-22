@@ -14,18 +14,22 @@ services:
       - postgres_data:/var/lib/postgresql/data
 
   backend:
-    build: ./backend
+    build: ./backend-spring
     container_name: studybuddy_api
     environment:
-      DATABASE_URL: postgres://studybuddy:studybuddy_pass@postgres:5432/studybuddy
-      PORT: 3001
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/studybuddy
+      SPRING_DATASOURCE_USERNAME: studybuddy
+      SPRING_DATASOURCE_PASSWORD: studybuddy_pass
+      SERVER_PORT: 3001
+      APP_FRONTEND_URL: http://localhost:5173
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
     ports:
       - "3001:3001"
     depends_on:
       - postgres
-    volumes:
-      - ./backend:/app
-      - /app/node_modules
 
   frontend:
     build: ./frontend

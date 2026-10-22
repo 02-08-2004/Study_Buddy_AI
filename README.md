@@ -135,8 +135,6 @@ studybuddy/
 │   │   ├── repository/          # Spring Data repositories
 │   │   └── config/              # Security & JWT config
 │   └── pom.xml
-│
-├── backend/                     # Legacy Node.js backend (kept for reference)
 ├── docker-compose.yml           # Docker orchestration
 └── README.md
 ```
@@ -167,15 +165,10 @@ cd Study_Buddy_AI
 -- In PostgreSQL:
 CREATE DATABASE studybuddy;
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
-CREATE EXTENSION IF NOT EXISTS "vector";
 ```
 
-Then run the schema migration:
-```bash
-cd backend
-npm install
-node src/utils/migrate.js
-```
+> 💡 **Note:** Database tables are automatically initialized when Spring Boot starts up using `schema.sql`. No manual migration script is needed.
+
 
 ---
 
