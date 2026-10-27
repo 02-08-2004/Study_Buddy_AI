@@ -37,6 +37,9 @@ export default function ChatPage() {
         const res = await api.get(`/api/sessions/${sessionId}`);
         setSession(res.data.session);
         setMessages(res.data.messages || []);
+        // Touch session updated_at so recent sessions is updated
+        api.put(`/api/sessions/${sessionId}`, {}).catch(() => {});
+        window.dispatchEvent(new Event('sessions-updated'));
       } catch (err) {
         setError('Session not found');
       }
@@ -67,6 +70,7 @@ export default function ChatPage() {
     try {
       const res = await api.post(`/api/chat/${sessionId}`, { message: msg });
       setMessages(prev => [...prev, res.data.message]);
+      window.dispatchEvent(new Event('sessions-updated'));
     } catch (err) {
       setError(err.response?.data?.error || 'Failed to send message');
       setMessages(prev => prev.filter(m => m.id !== optimisticMsg.id));
@@ -112,6 +116,7 @@ export default function ChatPage() {
       // Reload session to get updated material count/list if needed
       const sessionRes = await api.get(`/api/sessions/${sessionId}`);
       setSession(sessionRes.data.session);
+      window.dispatchEvent(new Event('sessions-updated'));
 
     } catch (err) {
       setError(err.response?.data?.error || 'Failed to upload file');

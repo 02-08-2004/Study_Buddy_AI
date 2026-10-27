@@ -23,6 +23,7 @@ public class QuizController {
     private final QuizResultRepository quizResultRepository;
     private final MaterialRepository materialRepository;
     private final UserProgressRepository progressRepository;
+    private final com.studybuddy.repository.CourseRepository courseRepository;
     private final AiService aiService;
     private final ObjectMapper objectMapper;
 
@@ -30,11 +31,13 @@ public class QuizController {
                           QuizResultRepository quizResultRepository,
                           MaterialRepository materialRepository,
                           UserProgressRepository progressRepository,
+                          com.studybuddy.repository.CourseRepository courseRepository,
                           AiService aiService) {
         this.sessionRepository = sessionRepository;
         this.quizResultRepository = quizResultRepository;
         this.materialRepository = materialRepository;
         this.progressRepository = progressRepository;
+        this.courseRepository = courseRepository;
         this.aiService = aiService;
         this.objectMapper = new ObjectMapper();
     }
@@ -57,11 +60,21 @@ public class QuizController {
             }
 
             StudySession session = sessOpt.get();
+            session.setUpdatedAt(LocalDateTime.now());
+            sessionRepository.save(session);
+
             List<UUID> materialIds = session.getSelectedMaterialIds() != null
                     ? Arrays.asList(session.getSelectedMaterialIds())
                     : Collections.emptyList();
 
-            Object quiz = aiService.generateQuiz(materialIds, topic, numQuestions);
+            String courseName = null;
+            if (session.getCourseId() != null) {
+                courseName = courseRepository.findById(session.getCourseId())
+                        .map(com.studybuddy.model.Course::getCourseName)
+                        .orElse(null);
+            }
+
+            Object quiz = aiService.generateQuiz(materialIds, topic, numQuestions, courseName);
             return ResponseEntity.ok(Map.of("quiz", quiz));
 
         } catch (Exception ex) {
@@ -88,11 +101,21 @@ public class QuizController {
             }
 
             StudySession session = sessOpt.get();
+            session.setUpdatedAt(LocalDateTime.now());
+            sessionRepository.save(session);
+
             List<UUID> materialIds = session.getSelectedMaterialIds() != null
                     ? Arrays.asList(session.getSelectedMaterialIds())
                     : Collections.emptyList();
 
-            Object flashcards = aiService.generateFlashcards(materialIds, topic, numCards);
+            String courseName = null;
+            if (session.getCourseId() != null) {
+                courseName = courseRepository.findById(session.getCourseId())
+                        .map(com.studybuddy.model.Course::getCourseName)
+                        .orElse(null);
+            }
+
+            Object flashcards = aiService.generateFlashcards(materialIds, topic, numCards, courseName);
             return ResponseEntity.ok(Map.of("flashcards", flashcards));
 
         } catch (Exception ex) {
@@ -125,6 +148,8 @@ public class QuizController {
             }
 
             StudySession session = sessOpt.get();
+            session.setUpdatedAt(LocalDateTime.now());
+            sessionRepository.save(session);
 
             QuizResult result = new QuizResult();
             result.setSessionId(sessionId);

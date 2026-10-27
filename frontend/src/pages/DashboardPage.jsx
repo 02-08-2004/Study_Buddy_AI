@@ -63,6 +63,12 @@ export default function DashboardPage() {
     loadSessions();
   }, []);
 
+  useEffect(() => {
+    const handleUpdate = () => loadSessions();
+    window.addEventListener('sessions-updated', handleUpdate);
+    return () => window.removeEventListener('sessions-updated', handleUpdate);
+  }, []);
+
   // Only show full-page spinner on very first load (both loading, nothing yet)
   if (loadingCourses && loadingSessions && courses.length === 0) {
     return (

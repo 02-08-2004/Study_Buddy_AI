@@ -24,16 +24,19 @@ public class ChatController {
     private final StudySessionRepository sessionRepository;
     private final ChatMessageRepository messageRepository;
     private final UserProgressRepository progressRepository;
+    private final com.studybuddy.repository.CourseRepository courseRepository;
     private final AiService aiService;
     private final ObjectMapper objectMapper;
 
     public ChatController(StudySessionRepository sessionRepository,
                           ChatMessageRepository messageRepository,
                           UserProgressRepository progressRepository,
+                          com.studybuddy.repository.CourseRepository courseRepository,
                           AiService aiService) {
         this.sessionRepository = sessionRepository;
         this.messageRepository = messageRepository;
         this.progressRepository = progressRepository;
+        this.courseRepository = courseRepository;
         this.aiService = aiService;
         this.objectMapper = new ObjectMapper();
     }
@@ -80,7 +83,14 @@ public class ChatController {
                     ? Arrays.asList(session.getSelectedMaterialIds())
                     : Collections.emptyList();
 
-            Map<String, Object> aiResponse = aiService.generateChatResponse(message, chatHistoryList, materialIds, profile);
+            String courseName = null;
+            if (session.getCourseId() != null) {
+                courseName = courseRepository.findById(session.getCourseId())
+                        .map(com.studybuddy.model.Course::getCourseName)
+                        .orElse(null);
+            }
+
+            Map<String, Object> aiResponse = aiService.generateChatResponse(message, chatHistoryList, materialIds, profile, courseName);
             String aiContent = (String) aiResponse.get("content");
             boolean contextUsed = (boolean) aiResponse.get("context_used");
 

@@ -18,13 +18,30 @@ export default function QuizPage() {
   const [results, setResults] = useState(null);
   const [error, setError] = useState('');
   const [startTime] = useState(Date.now());
+  const [elapsedSeconds, setElapsedSeconds] = useState(0);
   const [session, setSession] = useState(null);
+
+  useEffect(() => {
+    if (submitted) return;
+    const interval = setInterval(() => {
+      setElapsedSeconds(Math.floor((Date.now() - startTime) / 1000));
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [startTime, submitted]);
+
+  const formatElapsed = (secs) => {
+    const mins = Math.floor(secs / 60);
+    const s = secs % 60;
+    return `${mins}m ${s < 10 ? '0' : ''}${s}s elapsed`;
+  };
 
   useEffect(() => {
     const loadSession = async () => {
       try {
         const res = await api.get(`/api/sessions/${sessionId}`);
         setSession(res.data.session);
+        api.put(`/api/sessions/${sessionId}`, {}).catch(() => {});
+        window.dispatchEvent(new Event('sessions-updated'));
       } catch (err) {
         console.error('Failed to load session');
       }
@@ -97,6 +114,7 @@ export default function QuizPage() {
         timeTaken
       });
       setSubmitted(true);
+      window.dispatchEvent(new Event('sessions-updated'));
     } catch (err) {
       setError('Failed to submit results');
     } finally {
@@ -208,9 +226,9 @@ export default function QuizPage() {
           </button>
           <h2 className="text-white font-bold">Practice Quiz</h2>
         </div>
-        <div className="flex items-center gap-3 text-slate-400 text-sm">
-          <Timer size={16} />
-          <span>{Math.floor((Date.now() - startTime) / 60000)}m elapsed</span>
+        <div className="flex items-center gap-2 text-slate-400 text-xs bg-white/5 px-3 py-1.5 rounded-lg border border-white/5 select-none" title="Quiz timer">
+          <Timer size={14} className="text-brand-400" />
+          <span className="font-mono">{formatElapsed(elapsedSeconds)}</span>
         </div>
       </div>
 

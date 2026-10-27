@@ -21,6 +21,13 @@ public class DocumentParserService {
         String mType = mimeType != null ? mimeType.toLowerCase() : "";
 
         try {
+            // Reject video, audio, image, and archive/binary files explicitly
+            if (mType.startsWith("video/") || mType.startsWith("audio/") || mType.startsWith("image/")
+                    || fName.matches(".*\\.(mp4|mov|avi|mkv|webm|flv|wmv|mp3|wav|m4a|aac|ogg|flac|png|jpg|jpeg|gif|webp|svg|zip|rar|7z|tar|gz|exe|bin|iso|dmg|dll)$")) {
+                System.out.println("Document parser: skipping unsupported media/binary file: " + fileName);
+                return "";
+            }
+
             // PDF
             if (mType.contains("pdf") || fName.endsWith(".pdf")) {
                 try (PDDocument document = Loader.loadPDF(buffer)) {
@@ -53,8 +60,22 @@ public class DocumentParserService {
                 }
             }
 
-            // Plain text
-            return cleanText(new String(buffer, StandardCharsets.UTF_8));
+            // Plain text (only if mime type or extension is text/code)
+            if (mType.startsWith("text/") || mType.contains("json") || mType.contains("csv")
+                    || fName.matches(".*\\.(txt|md|csv|json|xml|html|htm|py|java|c|cpp|h|hpp|js|ts|jsx|tsx|css|sql|sh|yaml|yml|r|go|rs|rb)$")) {
+                // Check if buffer contains null bytes (binary check)
+                for (int i = 0; i < Math.min(buffer.length, 1024); i++) {
+                    if (buffer[i] == 0) {
+                        System.out.println("Document parser: detected binary null bytes in file: " + fileName);
+                        return "";
+                    }
+                }
+                return cleanText(new String(buffer, StandardCharsets.UTF_8));
+            }
+
+            // Unknown or unsupported format - do not blindly decode binary bytes as text
+            System.out.println("Document parser: unsupported file type: " + fileName + " (" + mimeType + ")");
+            return "";
 
         } catch (Exception ex) {
             System.err.println("Document text extraction error: " + ex.getMessage());

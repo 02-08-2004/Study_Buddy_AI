@@ -67,6 +67,14 @@ public class AiService {
                                                    List<Map<String, String>> chatHistory,
                                                    List<UUID> materialIds,
                                                    UserProgress learningProfile) {
+        return generateChatResponse(userMessage, chatHistory, materialIds, learningProfile, null);
+    }
+
+    public Map<String, Object> generateChatResponse(String userMessage,
+                                                   List<Map<String, String>> chatHistory,
+                                                   List<UUID> materialIds,
+                                                   UserProgress learningProfile,
+                                                   String courseName) {
         List<DocumentChunk> chunks = retrieveChunks(userMessage, materialIds, 8);
         boolean contextUsed = !chunks.isEmpty();
 
@@ -75,9 +83,23 @@ public class AiService {
                 .collect(Collectors.joining("\n---\n"));
 
         StringBuilder systemPrompt = new StringBuilder();
-        systemPrompt.append("You are StudyBuddy AI, an expert, encouraging, and clear university tutor.\n");
+        systemPrompt.append("You are StudyBuddy AI, an expert, encouraging, and clear university tutor");
+        if (courseName != null && !courseName.isBlank()) {
+            systemPrompt.append(" for the course: \"").append(courseName).append("\"");
+        }
+        systemPrompt.append(".\n");
+
+        if (courseName != null && !courseName.isBlank()) {
+            systemPrompt.append("Course Context: This session belongs to \"").append(courseName).append("\".\n")
+                    .append("Relevance Check: Verify whether the provided materials and student's inquiries align with ").append(courseName).append(". ")
+                    .append("If the student uploaded a document or asks questions completely unrelated to ").append(courseName)
+                    .append(" (such as a personal resume, CV, unrelated notes, or another subject), ")
+                    .append("politely note that the document appears unrelated to \"").append(courseName).append("\" (mention what it appears to be), ")
+                    .append("and advise them to upload or select materials relevant to ").append(courseName).append(".\n\n");
+        }
+
         if (contextUsed) {
-            systemPrompt.append("Ground your answers strictly and accurately in the following course materials:\n")
+            systemPrompt.append("Ground your answers accurately in the following course materials:\n")
                     .append(contextText)
                     .append("\n\nUse clear formatting with markdown headings, bullet points, and code blocks if relevant.\n");
         } else {
@@ -99,26 +121,37 @@ public class AiService {
     }
 
     public Object generateQuiz(List<UUID> materialIds, String topic, int numQuestions) {
+        return generateQuiz(materialIds, topic, numQuestions, null);
+    }
+
+    public Object generateQuiz(List<UUID> materialIds, String topic, int numQuestions, String courseName) {
         List<DocumentChunk> chunks = retrieveChunks(topic != null ? topic : "key concepts and definitions", materialIds, 10);
         String contextText = chunks.stream().map(DocumentChunk::getContent).collect(Collectors.joining("\n---\n"));
 
-        String prompt = "Generate a multiple-choice quiz with exactly " + numQuestions + " questions based on the course materials below.\n" +
-                "Format strictly as valid JSON without markdown fences:\n" +
-                "{\n" +
-                "  \"title\": \"Quiz: " + (topic != null ? topic : "Assessment") + "\",\n" +
-                "  \"questions\": [\n" +
-                "    {\n" +
-                "      \"question\": \"Question text?\",\n" +
-                "      \"options\": [\"A) Option text\", \"B) Option text\", \"C) Option text\", \"D) Option text\"],\n" +
-                "      \"correct\": \"A\",\n" +
-                "      \"explanation\": \"Why option A is correct...\",\n" +
-                "      \"topic\": \"Topic name\"\n" +
-                "    }\n" +
-                "  ]\n" +
-                "}\n\n" +
-                "Materials:\n" + contextText;
+        StringBuilder promptSb = new StringBuilder();
+        promptSb.append("Generate a multiple-choice quiz with exactly ").append(numQuestions).append(" questions based on the course materials below.\n");
+        if (courseName != null && !courseName.isBlank()) {
+            promptSb.append("Course Subject: \"").append(courseName).append("\".\n")
+                    .append("Important: Test academic subject concepts for \"").append(courseName).append("\". ")
+                    .append("If the materials are non-academic or unrelated to ").append(courseName)
+                    .append(" (e.g. a personal resume/CV), do not create trivia on personal details; focus on relevant concepts and politely mention the mismatch in explanations.\n");
+        }
+        promptSb.append("Format strictly as valid JSON without markdown fences:\n")
+                .append("{\n")
+                .append("  \"title\": \"Quiz: ").append(topic != null ? topic : "Assessment").append("\",\n")
+                .append("  \"questions\": [\n")
+                .append("    {\n")
+                .append("      \"question\": \"Question text?\",\n")
+                .append("      \"options\": [\"A) Option text\", \"B) Option text\", \"C) Option text\", \"D) Option text\"],\n")
+                .append("      \"correct\": \"A\",\n")
+                .append("      \"explanation\": \"Why option A is correct...\",\n")
+                .append("      \"topic\": \"Topic name\"\n")
+                .append("    }\n")
+                .append("  ]\n")
+                .append("}\n\n")
+                .append("Materials:\n").append(contextText);
 
-        String rawJson = callAi("You are an assessment generation expert that outputs only valid JSON.", prompt);
+        String rawJson = callAi("You are an assessment generation expert that outputs only valid JSON.", promptSb.toString());
         Object parsed = parseJsonSafely(rawJson);
 
         if (parsed instanceof Map<?, ?> map && map.containsKey("questions")) {
@@ -129,6 +162,10 @@ public class AiService {
     }
 
     public Object generateFlashcards(List<UUID> materialIds, String topic, int numCards) {
+        return generateFlashcards(materialIds, topic, numCards, null);
+    }
+
+    public Object generateFlashcards(List<UUID> materialIds, String topic, int numCards, String courseName) {
         List<DocumentChunk> chunks = retrieveChunks(topic != null ? topic : "key concepts and definitions", materialIds, 10);
         String contextText = chunks.stream().map(DocumentChunk::getContent).collect(Collectors.joining("\n---\n"));
 

@@ -82,9 +82,9 @@ public class MaterialController {
 
             String extractedText = documentParserService.extractText(buffer, mimeType, material.getFileName());
             if (extractedText == null || extractedText.length() < 50) {
-                material.setExtractionStatus("empty");
+                material.setExtractionStatus("unsupported");
                 materialRepository.save(material);
-                return ResponseEntity.ok(Map.of("message", "File has no extractable text", "materialId", materialId));
+                return ResponseEntity.ok(Map.of("message", "File has no extractable text or is an unsupported format (video/audio/binary files cannot be extracted as text)", "materialId", materialId));
             }
 
             material.setExtractedText(extractedText);
@@ -157,7 +157,7 @@ public class MaterialController {
             String extractedText = documentParserService.extractText(bytes, file.getContentType(), file.getOriginalFilename());
 
             if (extractedText == null || extractedText.length() < 50) {
-                return ResponseEntity.status(422).body(Map.of("error", "File has no extractable text or is too short"));
+                return ResponseEntity.status(422).body(Map.of("error", "Cannot extract text from this file format. Videos, audio, and binary files cannot be processed directly; please upload notes or documents (PDF, Word, PPTX, TXT)."));
             }
 
             Material material = new Material();

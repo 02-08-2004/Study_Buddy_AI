@@ -116,6 +116,7 @@ export default function CoursePage() {
         sessionTitle: `Study: ${courseName || 'Course Session'}`
       });
 
+      window.dispatchEvent(new Event('sessions-updated'));
       navigate(`/chat/${res.data.session.id}`);
     } catch (err) {
       setError(err.response?.data?.error || 'Failed to start session');

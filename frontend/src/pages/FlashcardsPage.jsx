@@ -21,6 +21,8 @@ export default function FlashcardsPage() {
       try {
         const res = await api.get(`/api/sessions/${sessionId}`);
         setSession(res.data.session);
+        api.put(`/api/sessions/${sessionId}`, {}).catch(() => {});
+        window.dispatchEvent(new Event('sessions-updated'));
       } catch (err) {
         console.error('Failed to load session');
       }

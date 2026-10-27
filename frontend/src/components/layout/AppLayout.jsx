@@ -1,20 +1,33 @@
-import { Outlet, NavLink, useNavigate } from 'react-router-dom';
+import { Outlet, NavLink, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import {
   LayoutDashboard, BookOpen, MessageSquare,
   TrendingUp, LogOut, ChevronRight, Sparkles
 } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import api from '../../lib/api';
 
 export default function AppLayout() {
   const { user, logout } = useAuth();
   const [sessions, setSessions] = useState([]);
   const navigate = useNavigate();
+  const location = useLocation();
+
+  const fetchSessions = useCallback(() => {
+    api.get('/api/sessions')
+      .then(res => setSessions(res.data.sessions?.slice(0, 5) || []))
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
-    api.get('/api/sessions').then(res => setSessions(res.data.sessions?.slice(0, 5) || []));
-  }, []);
+    fetchSessions();
+  }, [location.pathname, fetchSessions]);
+
+  useEffect(() => {
+    const handleUpdate = () => fetchSessions();
+    window.addEventListener('sessions-updated', handleUpdate);
+    return () => window.removeEventListener('sessions-updated', handleUpdate);
+  }, [fetchSessions]);
 
   const navItems = [
     { to: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },

@@ -87,6 +87,9 @@ public class SessionController {
             }
 
             StudySession session = sessOpt.get();
+            session.setUpdatedAt(LocalDateTime.now());
+            sessionRepository.save(session);
+
             if (session.getCourseId() != null) {
                 courseRepository.findById(session.getCourseId()).ifPresent(c -> session.setCourseName(c.getCourseName()));
             }
