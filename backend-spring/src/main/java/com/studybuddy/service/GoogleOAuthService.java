@@ -60,7 +60,6 @@ public class GoogleOAuthService {
 
     public User processOAuthCallback(String code) {
         try {
-            // 1. Exchange authorization code for tokens
             HttpHeaders tokenHeaders = new HttpHeaders();
             tokenHeaders.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
 
@@ -83,7 +82,6 @@ public class GoogleOAuthService {
             String refreshToken = tokenJson.has("refresh_token") ? tokenJson.get("refresh_token").asText() : null;
             int expiresIn = tokenJson.has("expires_in") ? tokenJson.get("expires_in").asInt() : 3600;
 
-            // 2. Fetch user profile from Google UserInfo endpoint
             HttpHeaders profileHeaders = new HttpHeaders();
             profileHeaders.setBearerAuth(accessToken);
             HttpEntity<Void> profileRequest = new HttpEntity<>(profileHeaders);
@@ -103,7 +101,6 @@ public class GoogleOAuthService {
 
             LocalDateTime tokenExpiry = LocalDateTime.now().plusSeconds(expiresIn);
 
-            // 3. Upsert user in database
             Optional<User> existingUserOpt = userRepository.findByGoogleAccountId(googleId);
             User user;
             if (existingUserOpt.isPresent()) {

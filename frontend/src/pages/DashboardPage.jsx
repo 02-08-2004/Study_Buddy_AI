@@ -37,7 +37,7 @@ export default function DashboardPage() {
     setSessionError('');
     try {
       const res = await api.get('/api/sessions');
-      setSessions(res.data.sessions?.slice(0, 4) || []);
+      setSessions(res.data.sessions || []);
     } catch (err) {
       setSessionError(err.response?.data?.error || 'Failed to load sessions');
     } finally {

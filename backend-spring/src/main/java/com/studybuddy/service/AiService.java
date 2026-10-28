@@ -230,7 +230,7 @@ public class AiService {
     }
 
     private String callGemini(String systemPrompt, String userMessage) {
-        // High-availability verified active models
+        // High-availability model candidates
         String[] modelCandidates = { "gemini-3.5-flash", "gemini-flash-lite-latest", "gemini-3.1-flash-lite", "gemini-flash-latest" };
 
         for (String modelName : modelCandidates) {
@@ -256,7 +256,7 @@ public class AiService {
                     return candidates.get(0).path("content").path("parts").get(0).path("text").asText();
                 }
             } catch (Exception ex) {
-                System.err.println("Gemini error with " + modelName + ": " + ex.getMessage());
+                // Try next model candidate
             }
         }
 
@@ -285,7 +285,6 @@ public class AiService {
             JsonNode root = objectMapper.readTree(response.getBody());
             return root.path("choices").get(0).path("message").path("content").asText();
         } catch (Exception ex) {
-            System.err.println("OpenAI call error: " + ex.getMessage());
             return "AI service error: " + ex.getMessage();
         }
     }

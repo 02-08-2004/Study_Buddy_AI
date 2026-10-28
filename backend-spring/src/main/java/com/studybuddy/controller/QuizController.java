@@ -2,6 +2,7 @@ package com.studybuddy.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.studybuddy.model.*;
+import com.studybuddy.repository.CourseRepository;
 import com.studybuddy.repository.MaterialRepository;
 import com.studybuddy.repository.QuizResultRepository;
 import com.studybuddy.repository.StudySessionRepository;
@@ -23,7 +24,7 @@ public class QuizController {
     private final QuizResultRepository quizResultRepository;
     private final MaterialRepository materialRepository;
     private final UserProgressRepository progressRepository;
-    private final com.studybuddy.repository.CourseRepository courseRepository;
+    private final CourseRepository courseRepository;
     private final AiService aiService;
     private final ObjectMapper objectMapper;
 
@@ -31,7 +32,7 @@ public class QuizController {
                           QuizResultRepository quizResultRepository,
                           MaterialRepository materialRepository,
                           UserProgressRepository progressRepository,
-                          com.studybuddy.repository.CourseRepository courseRepository,
+                          CourseRepository courseRepository,
                           AiService aiService) {
         this.sessionRepository = sessionRepository;
         this.quizResultRepository = quizResultRepository;
@@ -70,7 +71,7 @@ public class QuizController {
             String courseName = null;
             if (session.getCourseId() != null) {
                 courseName = courseRepository.findById(session.getCourseId())
-                        .map(com.studybuddy.model.Course::getCourseName)
+                        .map(Course::getCourseName)
                         .orElse(null);
             }
 
@@ -78,7 +79,6 @@ public class QuizController {
             return ResponseEntity.ok(Map.of("quiz", quiz));
 
         } catch (Exception ex) {
-            System.err.println("Quiz generation error: " + ex.getMessage());
             return ResponseEntity.status(500).body(Map.of("error", ex.getMessage()));
         }
     }
@@ -111,7 +111,7 @@ public class QuizController {
             String courseName = null;
             if (session.getCourseId() != null) {
                 courseName = courseRepository.findById(session.getCourseId())
-                        .map(com.studybuddy.model.Course::getCourseName)
+                        .map(Course::getCourseName)
                         .orElse(null);
             }
 
@@ -119,7 +119,6 @@ public class QuizController {
             return ResponseEntity.ok(Map.of("flashcards", flashcards));
 
         } catch (Exception ex) {
-            System.err.println("Flashcard generation error: " + ex.getMessage());
             return ResponseEntity.status(500).body(Map.of("error", ex.getMessage()));
         }
     }
@@ -162,7 +161,7 @@ public class QuizController {
             result.setCreatedAt(LocalDateTime.now());
             quizResultRepository.save(result);
 
-            // Update materials study_status
+
             if (session.getSelectedMaterialIds() != null) {
                 for (UUID matId : session.getSelectedMaterialIds()) {
                     materialRepository.findById(matId).ifPresent(m -> {
@@ -172,7 +171,7 @@ public class QuizController {
                 }
             }
 
-            // Update user progress
+
             if (session.getCourseId() != null) {
                 Optional<UserProgress> progOpt = progressRepository.findByUserIdAndCourseId(user.getId(), session.getCourseId());
                 UserProgress prog = progOpt.orElseGet(() -> {
@@ -203,7 +202,6 @@ public class QuizController {
             return ResponseEntity.ok(Map.of("message", "Quiz results saved"));
 
         } catch (Exception ex) {
-            System.err.println("Quiz submit error: " + ex.getMessage());
             return ResponseEntity.status(500).body(Map.of("error", ex.getMessage()));
         }
     }

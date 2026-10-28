@@ -2,10 +2,12 @@ package com.studybuddy.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.studybuddy.model.ChatMessage;
+import com.studybuddy.model.Course;
 import com.studybuddy.model.StudySession;
 import com.studybuddy.model.User;
 import com.studybuddy.model.UserProgress;
 import com.studybuddy.repository.ChatMessageRepository;
+import com.studybuddy.repository.CourseRepository;
 import com.studybuddy.repository.StudySessionRepository;
 import com.studybuddy.repository.UserProgressRepository;
 import com.studybuddy.service.AiService;
@@ -24,14 +26,14 @@ public class ChatController {
     private final StudySessionRepository sessionRepository;
     private final ChatMessageRepository messageRepository;
     private final UserProgressRepository progressRepository;
-    private final com.studybuddy.repository.CourseRepository courseRepository;
+    private final CourseRepository courseRepository;
     private final AiService aiService;
     private final ObjectMapper objectMapper;
 
     public ChatController(StudySessionRepository sessionRepository,
                           ChatMessageRepository messageRepository,
                           UserProgressRepository progressRepository,
-                          com.studybuddy.repository.CourseRepository courseRepository,
+                          CourseRepository courseRepository,
                           AiService aiService) {
         this.sessionRepository = sessionRepository;
         this.messageRepository = messageRepository;
@@ -86,7 +88,7 @@ public class ChatController {
             String courseName = null;
             if (session.getCourseId() != null) {
                 courseName = courseRepository.findById(session.getCourseId())
-                        .map(com.studybuddy.model.Course::getCourseName)
+                        .map(Course::getCourseName)
                         .orElse(null);
             }
 
@@ -125,7 +127,6 @@ public class ChatController {
             ));
 
         } catch (Exception ex) {
-            System.err.println("Chat error: " + ex.getMessage());
             return ResponseEntity.status(500).body(Map.of("error", ex.getMessage()));
         }
     }

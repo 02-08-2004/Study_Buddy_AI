@@ -110,7 +110,6 @@ public class MaterialController {
             ));
 
         } catch (Exception ex) {
-            System.err.println("Material processing error: " + ex.getMessage());
             return ResponseEntity.status(500).body(Map.of("error", ex.getMessage()));
         }
     }
@@ -198,7 +197,6 @@ public class MaterialController {
             ));
 
         } catch (Exception ex) {
-            System.err.println("Upload error: " + ex.getMessage());
             return ResponseEntity.status(500).body(Map.of("error", ex.getMessage()));
         }
     }

@@ -11,6 +11,8 @@ import java.io.ByteArrayInputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @Service
 public class DocumentParserService {
@@ -21,10 +23,8 @@ public class DocumentParserService {
         String mType = mimeType != null ? mimeType.toLowerCase() : "";
 
         try {
-            // Reject video, audio, image, and archive/binary files explicitly
             if (mType.startsWith("video/") || mType.startsWith("audio/") || mType.startsWith("image/")
                     || fName.matches(".*\\.(mp4|mov|avi|mkv|webm|flv|wmv|mp3|wav|m4a|aac|ogg|flac|png|jpg|jpeg|gif|webp|svg|zip|rar|7z|tar|gz|exe|bin|iso|dmg|dll)$")) {
-                System.out.println("Document parser: skipping unsupported media/binary file: " + fileName);
                 return "";
             }
 
@@ -40,7 +40,7 @@ public class DocumentParserService {
             if (mType.contains("presentation") || fName.endsWith(".pptx") || fName.endsWith(".ppt")) {
                 try {
                     String content = new String(buffer, StandardCharsets.ISO_8859_1);
-                    java.util.regex.Matcher m = java.util.regex.Pattern.compile("<a:t[^>]*>([^<]+)</a:t>").matcher(content);
+                    Matcher m = Pattern.compile("<a:t[^>]*>([^<]+)</a:t>").matcher(content);
                     StringBuilder sb = new StringBuilder();
                     while (m.find()) {
                         sb.append(m.group(1)).append(" ");
@@ -63,22 +63,15 @@ public class DocumentParserService {
             // Plain text (only if mime type or extension is text/code)
             if (mType.startsWith("text/") || mType.contains("json") || mType.contains("csv")
                     || fName.matches(".*\\.(txt|md|csv|json|xml|html|htm|py|java|c|cpp|h|hpp|js|ts|jsx|tsx|css|sql|sh|yaml|yml|r|go|rs|rb)$")) {
-                // Check if buffer contains null bytes (binary check)
                 for (int i = 0; i < Math.min(buffer.length, 1024); i++) {
-                    if (buffer[i] == 0) {
-                        System.out.println("Document parser: detected binary null bytes in file: " + fileName);
-                        return "";
-                    }
+                    if (buffer[i] == 0) return "";
                 }
                 return cleanText(new String(buffer, StandardCharsets.UTF_8));
             }
 
-            // Unknown or unsupported format - do not blindly decode binary bytes as text
-            System.out.println("Document parser: unsupported file type: " + fileName + " (" + mimeType + ")");
             return "";
 
         } catch (Exception ex) {
-            System.err.println("Document text extraction error: " + ex.getMessage());
             return "";
         }
     }
@@ -119,7 +112,6 @@ public class DocumentParserService {
                     }
                     currentChunk = new StringBuilder(overlapSb.toString().trim()).append("\n\n").append(pTrimmed);
                 } else {
-                    // Paragraph itself is larger than chunkSize, split by sentences
                     String[] sentences = pTrimmed.split("(?<=[.!?])\\s+");
                     for (String sentence : sentences) {
                         if (currentChunk.length() + sentence.length() <= chunkSize) {

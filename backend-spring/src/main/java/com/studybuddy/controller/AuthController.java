@@ -47,7 +47,6 @@ public class AuthController {
             String token = jwtUtils.generateToken(user.getId(), user.getEmail());
             response.sendRedirect(frontendUrl + "/login/callback?token=" + token);
         } catch (Exception ex) {
-            System.err.println("OAuth callback error: " + ex.getMessage());
             response.sendRedirect(frontendUrl + "/login?error=auth_failed");
         }
     }
